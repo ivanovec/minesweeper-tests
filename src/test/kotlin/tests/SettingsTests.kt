@@ -36,7 +36,7 @@ class SettingsTests : BaseTest() {
             Arguments.of("1", "2", "1"),
             Arguments.of("10000", "10000", "99999999"),
             Arguments.of("10000", "1", "9999"),
-            )
+        )
 
         @JvmStatic
         fun getTableToBombCountsInvalid() = listOf(  // rows, columns, bombs
@@ -56,7 +56,7 @@ class SettingsTests : BaseTest() {
         SettingsPage.bombCount.find("input").shouldHave(Condition.value("0"))
 
         SettingsPage.startButton.shouldBe(Condition.disabled)
-        SettingsPage.settingsHeader.shouldBe(Condition.visible)
+        SettingsPage.pageHeader.shouldBe(Condition.visible)
     }
 
     @Test

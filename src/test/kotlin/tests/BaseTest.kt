@@ -6,6 +6,6 @@ import org.junit.jupiter.api.BeforeEach
 open class BaseTest {
     @BeforeEach
     fun prepare(){
-        Selenide.open("http://localhost:3000/")
+        Selenide.open("http://localhost:3000/") //TBD: move to config file
     }
 }

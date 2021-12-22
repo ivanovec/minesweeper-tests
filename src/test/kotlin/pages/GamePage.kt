@@ -1,6 +1,5 @@
 package pages
 
-import com.codeborne.selenide.Selenide
 import com.codeborne.selenide.Selenide.*
 import com.codeborne.selenide.SelenideElement
 import java.time.Duration
@@ -21,48 +20,41 @@ class GamePage(val row: String = "10", val col: String = "10" , val bomb: String
     val cells = `$$x`("//div[@data-column-index]")
     val bombCells = `$$x`("//div[text()='✱']")
     val lostText = `$x`("//div[text()='you lost']")
-    val allCells = `$$x`("//div[@data-column-index]")
-    val scrollHeight = Selenide.executeJavaScript<Long>("return (arguments[0]).scrollHeight", mineTable)!!
-    val scrollWidth = Selenide.executeJavaScript<Long>("return (arguments[0]).scrollWidth", mineTable)!!
+    val victoryText = `$x`("//div[text()='victory']")
 
+
+    val rowAttributeName = "data-row-index"
+    val colAttributeName = "data-column-index"
+    private val scrollHeight = executeJavaScript<Long>("return (arguments[0]).scrollHeight", mineTable)!!
+    private val scrollWidth = executeJavaScript<Long>("return (arguments[0]).scrollWidth", mineTable)!!
+    private val maxDisplayedCells = 22
 
     fun cellsWithState(state: CellState) = `$$`("div[content='${state.code}']")
 
     fun getCell(row :String, column :String) :SelenideElement{
-        return `$`("div[data-row-index = '$row'][data-column-index = '$column']")
+        return `$`("div[$rowAttributeName = '$row'][$colAttributeName = '$column']")
     }
 
-    fun gotLostState(timeout :Duration = Duration.of(1, ChronoUnit.MINUTES)){
-//        val deadline = System.currentTimeMillis() + timeout.toMillis()
-//
-//        while (!lostText.exists() && System.currentTimeMillis() < deadline) {
-//            for (cell in cells) {
-//                cell.click()
-//                if (lostText.exists()) return
-//            }
-//            retryButton.click()
-//        }
+    fun gotLostState(){
         cells.first().click()
         cellsWithState(CellState.BOMB_HIDDEN).first().click()
     }
 
-
-    fun getCellsAroundIt(cell :SelenideElement): List<SelenideElement> {
+    fun getCellsAround(cell :SelenideElement): List<SelenideElement> {
         val cells = ArrayList<SelenideElement>()
-        val currentRow = cell.attr("data-row-index")!!.toInt()
-        val currentCol = cell.attr("data-column-index")!!.toInt()
+        val currentRow = cell.attr(rowAttributeName)!!.toInt()
+        val currentCol = cell.attr(colAttributeName)!!.toInt()
 
         for(i in currentRow - 1 .. currentRow + 1 ){
-            if( i < 0 || i >= row.toInt()) continue
-
+            if( i < 0 || i >= row.toInt()) continue // out of range
             for( j in currentCol - 1 .. currentCol +1){
-                if(j % 22 == 0 && j != 0){
-                    scrollTableTo(scrollWidth.toInt() % col.toInt(), i)
+                if(j % maxDisplayedCells == 0 && j != 0){ //border of rendered table
+                    scrollTableTo(j + maxDisplayedCells, i) //scroll to next slice to render it in dom
                 }
-                if(i % 22 == 0 && i !=0) {
-                    scrollTableTo(j, scrollHeight.toInt() % row.toInt())
+                if(i % maxDisplayedCells == 0 && i !=0) {
+                    scrollTableTo(j, i + maxDisplayedCells)
                 }
-                if( j < 0 || j >= col.toInt()) continue
+                if( j < 0 || j >= col.toInt()) continue //out of range
                 if( i == currentRow && j == currentCol ) continue
                 cells.add(getCell(i.toString(), j.toString()))
             }
@@ -76,27 +68,13 @@ class GamePage(val row: String = "10", val col: String = "10" , val bomb: String
     fun getCellsNotHaveBombsAround(): List<SelenideElement> {
         val cellsWithBombs = cellsWithState(CellState.BOMB_HIDDEN)
         val cellsAroundBombs = ArrayList<SelenideElement>()
-        cellsWithBombs.forEach { cellsAroundBombs.addAll(getCellsAroundIt(it)) }
+        cellsWithBombs.forEach { cellsAroundBombs.addAll(getCellsAround(it)) }
 
         val emptyCells = ArrayList<SelenideElement>()
         for ( cell in cellsWithState(CellState.NOT_BOMB_HIDDEN).snapshot()){
             if(!cellsAroundBombs.contains(cell)) emptyCells.add(cell)
         }
         return emptyCells
-//        return cellsWithState(CellState.NOT_BOMB_HIDDEN).filterNot { cellsAroundBombs.contains(it) }
-    }
-
-    fun revealCellWithNumber(number :String){
-        val deadline = System.currentTimeMillis() + Duration.of(1, ChronoUnit.MINUTES).toMillis()
-
-        val hiddenCells = cellsWithState(CellState.NOT_BOMB_HIDDEN).snapshot()
-        while (true) {//&& System.currentTimeMillis() < deadline) {
-            for (cell in cellsWithState(CellState.NOT_BOMB_HIDDEN)){
-                if(cell.text() == number) return
-                if(getCellState(cell) == CellState.NOT_BOMB_HIDDEN) cell.click()
-            }
-            retryButton.click()
-        }
     }
 
     fun getCellStateByCode(code :String) = CellState.values().firstOrNull { s -> s.code == code } ?: CellState.AROUND_BOMB
@@ -112,14 +90,5 @@ class GamePage(val row: String = "10", val col: String = "10" , val bomb: String
         BOMB_HIDDEN("2"),
         EMPTY("9"),
         AROUND_BOMB("")
-    }
-
-    inner class Cell(private val element :SelenideElement) {
-        val row = element.attr("data-row-index")!!.toInt()
-        val col = element.attr("data-column-index")!!.toInt()
-
-        fun getElement(){
-            scrollTableTo(col, row)
-        }
     }
 }

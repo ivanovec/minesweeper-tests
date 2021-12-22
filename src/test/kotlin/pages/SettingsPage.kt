@@ -1,18 +1,17 @@
 package pages
 
-import com.codeborne.selenide.Selenide
+import com.codeborne.selenide.Selenide.`$x`
 
 object SettingsPage : BasePage(){
 
-    val rowCount = Selenide.`$x`("//label[text()='Row count']")
-    val columnCount = Selenide.`$x`("//label[text()='Column count']")
-    val bombCount = Selenide.`$x`("//label[text()='Bomb count']")
-    val startButton = Selenide.`$x`("//button[text()='Start the game']")
+    val rowCount = `$x`("//label[text()='Row count']")
+    val columnCount = `$x`("//label[text()='Column count']")
+    val bombCount = `$x`("//label[text()='Bomb count']")
+    val startButton = `$x`("//button[text()='Start the game']")
 
-    val rowCountInput = Selenide.`$x`("//label[text()='Row count']/input")
-    val columnCountInput = Selenide.`$x`("//label[text()='Column count']/input")
-    val bombCountInput = Selenide.`$x`("//label[text()='Bomb count']/input")
-
+    val rowCountInput = `$x`("//label[text()='Row count']/input")
+    val columnCountInput = `$x`("//label[text()='Column count']/input")
+    val bombCountInput = `$x`("//label[text()='Bomb count']/input")
 
     fun enterFields(row :String, column :String, bomb :String) : SettingsPage{
         rowCountInput.clear()
